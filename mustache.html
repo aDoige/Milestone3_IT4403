@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Bootstrap Example</title>
+		<meta charset="utf-8">
+  		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+		<script src="mustache.js"></script>
+		<style></style>
+		
+		<script id="booklisttemplate" type="text/template">
+			{{#items}}
+				<div class="booklistitem" id="{{id}}">
+					<div class="booklistitemheader" data-bookId="{{id}}">
+						<img class="thumbnail" src='{{volumeInfo.imageLinks.smallThumbnail}}' />
+							<h2 class="title" style="text-align: center">{{volumeInfo.title}}></h2>
+						</div>
+					<div class="bookdetails" style="display:none"></div>
+				</div>
+			{{/items}}
+		</script>
+		
+		<script type="text/template" id="bookdetailstemplate" >
+				<div class='book'>
+					<h3 style='text-align: center'> {{volumeInfo.subtitle}}</h3>
+						<div style='margin: 15px'>
+							<p>Subtitle: {{volumenInfo.subtitle}}</p>
+							<p>{{volumeInfo.imageLinks.smallThumbnail}}</p>
+							<p>{{volumeInfo.title}}</p>
+							<p>{{volumeInfo.authors}}</p>
+							<p>{{volumeInfo.ratingsCount}}</p>
+							<p>{{volumeInfo.averageRating}}</p>
+							<p>{{volumeInfo.publishedDate}}</p>
+							
+							<h4 style='text-align: center'>Descriptions:</h4>
+							<div>{{volumeInfo.descriptions}}</div>
+						</div>
+						<div style="clear: both"></div>
+					</div>
+		</script>
+		
+	</head>
+	<body>
+		
+		<div id="header"><h1>Bootstrap Pagination</h1></div>
+		<div class="container">
+			<div id="searchBooks">
+				<input type="text" id="search" placeholder="Enter Key Terms to Search... "/>
+				<input type="button" id="myBtn" value="Go Fetch"/><span id="pages"></span><br><br>
+			</div>
+		</div>
+		<div id="booklist">
+			<table id="booksResults">
+				<tr>
+					<td></td>
+					<td></td>
+				</tr>
+			</table>
+		</div>		
+		<div id="pager">
+			<nav>
+				<ul class="pagination">
+					<li class="disabled">
+						<a href="#" aria-label="Previous">
+							<span aria-hidden="true">&laquo;</span>
+							<span class="sr-only">Previous</span>
+						</a>
+					</li>
+					<li class="active"><a href="#">1</a></li>
+					<li><a href="#">2</a></li>
+        			<li><a href="#">3</a></li>
+        			<li><a href="#">4</a></li>
+        			<li><a href="#">5</a></li>
+        			<li>
+						<a href="#" aria-label="Next">
+							<span aria-hidden="true">&raquo;</span>
+							<span class="sr-only">Next</span>
+						</a>
+        			</li>
+				</ul>
+			</nav>
+		</div>
+		
+		<script type="text/javascript">
+			$(document).ready(function () {
+				
+				
+				var servicePoint = "https://www.googleapis.com/books/v1/volumes/";
+				searchBooks()
+			
+			function searchBooks() 
+			{
+				$("#myBtn").click(function(event) {
+					
+					var search = document.getElementById("search").value;
+					console.log(search);
+					var servicePoint = "https://www.googleapis.com/books/v1/volumes/";
+					var parameter = "?q=" + search + "&startIndex=0";
+					
+					//$("#booklist").html("Searching ..."+"<img src='http://vignette1.wikia.nocookie.net/wikiality/images/7/70/ProgressBar.gif/revision/latest?cb=20070406024457'>");
+					$.getJSON(servicePoint + parameter, function(data) {
+						console.log(data);
+						
+						for (i = 0; i < data.items.length; i++) {
+							var image = data.items[i].volumeInfo.imageLinks.smallThumbnail;
+							var cover = "<img src='" + image + "' style='float: left' />";
+							var bookId = data.items[i].id; 
+							var title = data.items[i].volumeInfo.title;
+							var author = data.items[i].volumeInfo.authors;
+							var numOfratings = data.items[i].volumeInfo.ratingsCount;
+							var avgRating = data.items[i].volumeInfo.averageRating;
+							var publishedDate = data.items[i].volumeInfo.publishedDate; 
+							var description = data.items[i].volumeInfo.description;
+							//var details = "<img src='" + image + "' style=' float: left' /><a href= "+data.items[i].volumeInfo.infoLink+"></a><br><br><br><br><button id='btn'>More Info</button>";
+							
+								
+						}
+						
+						//var template = $('booklisttemplate').html(); 
+						//var html = Mustache.render(template, data);
+						
+						//$("#booklist").append(html);
+						$(".booklistitem").on('click', function () 
+						{							
+							getBookDetails(data, $(this).attr("id"));
+						});
+					});
+				});
+			}
+			
+			function getBookDetails(data, bookId)
+     		{  
+				var template = $('bookdetailstemplate').html(); 
+				
+				$.each(data.items, function (index, item){
+					console.log(item);
+					
+					var html = '' + '<div class="dataItem">' + '<p>{{{title}}</p>' + '</div>';
+					$('booklist').append(Mustache.render(html, item));
+
+				});
+			}
+					
+			function apply_pagination() 
+			{
+				$pagination.twbsPagination ({
+					totalBooks: totalBooks, 
+					visiblePages: 5, 
+					onPageClick: function (event, page) {
+						displayBooksIndex = Max.max(page - 1, 0) * numberPerPage; 
+						endList = (displayBooksIndex) + numberPerPage; 
+						
+						displayBooks = books.slice(displayBooksIndex, endList);
+						generate_listOfBooks(); 
+					}
+				});
+			}
+			});
+			
+			
+		</script>
+				
+	</body>
+</html>
